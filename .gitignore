@@ -64,3 +64,5 @@ typings/
 *.tsbuildinfo
 
 .idea/
+
+db.json

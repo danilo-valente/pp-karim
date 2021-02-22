@@ -1,6 +1,7 @@
 import {inject} from '@loopback/core';
 import {get, Model, param, post, Request, requestBody, response, ResponseObject, RestBindings} from '@loopback/rest';
 import {model, property} from '@loopback/repository';
+import {authenticate} from '@loopback/authentication';
 
 /**
  * OpenAPI response for ping()
@@ -59,9 +60,7 @@ export class Message extends Model {
 
 const MESSAGES: Record<string, Message[]> = {};
 
-/**
- * A simple controller to bounce back http requests
- */
+@authenticate('jwt')
 export class MessagesController {
 
   constructor(@inject(RestBindings.Http.REQUEST) private req: Request) {
