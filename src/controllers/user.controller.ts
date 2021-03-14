@@ -1,4 +1,4 @@
-import {inject} from '@loopback/core';
+import {inject, service} from '@loopback/core';
 import {model, property, repository} from '@loopback/repository';
 import {
   Credentials,
@@ -13,6 +13,7 @@ import {SecurityBindings, securityId, UserProfile} from '@loopback/security';
 import {get, getModelSchemaRef, post, requestBody, SchemaObject} from '@loopback/rest';
 import {genSalt, hash} from 'bcryptjs';
 import _ from 'lodash';
+import {FirebaseAuthUserService} from '../services';
 
 @model()
 export class NewUserRequest extends User {
@@ -47,13 +48,22 @@ export const CredentialsRequestBody = {
 };
 
 /**
+ * [UserServiceBindings.USER_SERVICE] == UserService
+ *
+ * [UserServiceBindings.USER_SERVICE]: MyUserService
+ * ou
+ * [UserServiceBindings.USER_SERVICE]: FirebaseAuthUserService
+ */
+
+/**
  * A simple controller to bounce back http requests
  */
 export class UserController {
 
   constructor(
     @inject(TokenServiceBindings.TOKEN_SERVICE) public jwtService: TokenService,
-    @inject(UserServiceBindings.USER_SERVICE) public userService: MyUserService,
+    // @inject(UserServiceBindings.USER_SERVICE) public userService: FirebaseAuthUserService,
+    @service() public userService: FirebaseAuthUserService,
     @inject(SecurityBindings.USER, {optional: true}) public user: UserProfile,
     @repository(UserRepository) protected userRepository: UserRepository,
   ) {
@@ -139,12 +149,18 @@ export class UserController {
     })
       newUserRequest: NewUserRequest,
   ): Promise<User> {
-    const password = await hash(newUserRequest.password, await genSalt());
-    const savedUser = await this.userRepository.create(
-      _.omit(newUserRequest, 'password'),
-    );
-
-    await this.userRepository.userCredentials(savedUser.id).create({password});
+    // const password = await hash(newUserRequest.password, await genSalt());
+    // const savedUser = await this.userRepository.create(
+    //   _.omit(newUserRequest, 'password'),
+    // );
+    //
+    // await this.userRepository.userCredentials(savedUser.id).create({password});
+    console.log(this.userService);
+    // @ts-ignore
+    const savedUser = await this.userService.createUser({
+      email: newUserRequest.email,
+      password: newUserRequest.password
+    });
 
     return savedUser;
   }

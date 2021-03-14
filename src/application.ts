@@ -13,8 +13,10 @@ import {
   UserServiceBindings,
 } from '@loopback/authentication-jwt';
 import path from 'path';
+import FirebaseAdmin from 'firebase-admin';
 import {MySequence} from './sequence';
 import { DbDataSource } from './datasources';
+import { ServiceBindings } from './services';
 
 export {ApplicationConfig};
 
@@ -23,6 +25,12 @@ export class PpKarimApplication extends BootMixin(
 ) {
   constructor(options: ApplicationConfig = {}) {
     super(options);
+
+    this.bind(ServiceBindings.FIREBASE_APP).to(
+      FirebaseAdmin.initializeApp({
+        credential: FirebaseAdmin.credential.cert(require(process.env.FIREBASE_CREDENTIAL as string))
+      })
+    );
 
     // Mount authentication system
     this.component(AuthenticationComponent);
